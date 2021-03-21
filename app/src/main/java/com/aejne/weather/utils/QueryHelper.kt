@@ -13,14 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.example.androiddevchallenge.ui.theme
+package com.aejne.weather.utils
 
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Shapes
-import androidx.compose.ui.unit.dp
+object QueryHelper {
 
-val shapes = Shapes(
-    small = RoundedCornerShape(4.dp),
-    medium = RoundedCornerShape(4.dp),
-    large = RoundedCornerShape(0.dp)
-)
+    private const val APP_ID = "e23c7fd08bbbbd2608b67c01c0b6f00a"
+
+    fun createWeatherQueryMap(city: String): Map<String, String> = mapOf(
+        "q" to city,
+        "units" to "metric",
+        "appid" to APP_ID
+    )
+
+    fun createOneCallQueryMap(lat: Float, lon: Float) = mapOf(
+        "lat" to lat.toString(),
+        "lon" to lon.toString(),
+        "units" to "metric",
+        "appid" to APP_ID
+    )
+}

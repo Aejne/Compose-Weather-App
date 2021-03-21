@@ -13,13 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.example.androiddevchallenge
+package com.aejne.weather.ui.theme
 
-/**
- * Example local unit test, which will execute on the development machine (host).
- *
- * See [testing documentation](http://d.android.com/tools/testing).
- */
-class ExampleUnitTest {
-    // Add unit tests here
-}
+import androidx.compose.ui.graphics.Color
+
+val purple200 = Color(0xFFBB86FC)
+val teal200 = Color(0xFF03DAC5)
+
+val indigo300 = Color(0xFF7986cb)
+val indigo900 = Color(0xFF1a237e)
+
+val orange700 = Color(0xFFf57c00)
+
+val pink100 = Color(0xFFf8bbd0)
+val pink300 = Color(0xFFf06292)

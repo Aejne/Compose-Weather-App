@@ -13,26 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.example.androiddevchallenge
+package com.aejne.weather.utils
 
-import androidx.compose.ui.test.junit4.createAndroidComposeRule
-import androidx.test.ext.junit.runners.AndroidJUnit4
-import org.junit.Rule
-import org.junit.Test
-import org.junit.runner.RunWith
+data class Resource<out T>(
+    val status: Status,
+    val data: T?,
+    val message: String?
+) {
+    companion object {
 
-/**
- * Instrumented test, which will execute on an Android device.
- *
- * See [testing documentation](http://d.android.com/tools/testing).
- */
-@RunWith(AndroidJUnit4::class)
-class ExampleInstrumentedTest {
-    @get:Rule
-    val composeTestRule = createAndroidComposeRule<MainActivity>()
+        fun <T> success(data: T?): Resource<T> {
+            return Resource(Status.SUCCESS, data, null)
+        }
 
-    @Test
-    fun sampleTest() {
-        // Add instrumented tests here
+        fun <T> error(msg: String, data: T?): Resource<T> {
+            return Resource(Status.ERROR, data, msg)
+        }
+
+        fun <T> loading(data: T?): Resource<T> {
+            return Resource(Status.LOADING, data, null)
+        }
     }
 }

@@ -10,7 +10,5 @@
   the License.
   -->
 <resources>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
-    <color name="navigationBarColor">#80FFFFFF</color>
+    <color name="navigationBarColor">#80121212</color>
 </resources>
