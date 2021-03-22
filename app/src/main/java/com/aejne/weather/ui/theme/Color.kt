@@ -17,11 +17,10 @@ package com.aejne.weather.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val purple200 = Color(0xFFBB86FC)
-val teal200 = Color(0xFF03DAC5)
-
 val indigo300 = Color(0xFF7986cb)
 val indigo900 = Color(0xFF1a237e)
+
+val blueGrey900 = Color(0xFF263238)
 
 val orange700 = Color(0xFFf57c00)
 

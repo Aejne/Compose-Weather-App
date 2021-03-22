@@ -54,6 +54,7 @@ val cityList = listOf(
     "Moscow",
     "Sydney",
     "Bogota",
+    "Gotham City",
     "Buenos Aires",
     "New York",
     "Beijing",
@@ -70,7 +71,7 @@ fun Backdrop(
     onNavClick: () -> Unit,
     onCitySelected: (String) -> Unit
 ) {
-    Surface(modifier = modifier) {
+    Surface(modifier = modifier, color = MaterialTheme.colors.background) {
         Column(
             modifier = Modifier
                 .verticalGradientScrim(
@@ -111,7 +112,7 @@ fun CityChip(
     Text(
         modifier = modifier
             .border(
-                color = MaterialTheme.colors.onSurface,
+                color = MaterialTheme.colors.onBackground,
                 shape = RoundedCornerShape(percent = 50),
                 width = 1.dp
             )
@@ -120,7 +121,7 @@ fun CityChip(
                 vertical = 4.dp,
                 horizontal = 8.dp
             ),
-        color = MaterialTheme.colors.onSurface,
+        color = MaterialTheme.colors.onBackground,
         text = city,
         style = MaterialTheme.typography.body2
     )

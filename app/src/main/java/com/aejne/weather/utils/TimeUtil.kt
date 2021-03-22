@@ -38,6 +38,14 @@ object TimeUtil {
             .format(DateTimeFormatter.ofPattern("HH:mm"))
     }
 
+    fun formatWeekDay(timestamp: String): String {
+        return Instant
+            .ofEpochMilli(timestamp.toLong() * 1000)
+            .atZone(ZoneId.systemDefault())
+            .toLocalDateTime()
+            .format(DateTimeFormatter.ofPattern("E dd"))
+    }
+
     fun currentTime(): Long {
         return Instant.now().toEpochMilli()
     }

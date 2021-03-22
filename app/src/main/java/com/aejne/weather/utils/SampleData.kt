@@ -75,7 +75,7 @@ val sampleExtendedData = OneCallResponse(
     daily = listOf(
         DailyItem(
             "1616129539",
-            Temp(10.0, 15.5),
+            Temp(10.0, 8.5, 12.1, 7.2),
             listOf(
                 Weather(
                     id = 800,

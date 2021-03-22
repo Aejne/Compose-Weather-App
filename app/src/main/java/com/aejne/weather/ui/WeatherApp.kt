@@ -17,12 +17,10 @@ package com.aejne.weather.ui
 
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -34,11 +32,14 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
@@ -50,7 +51,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -59,12 +59,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.aejne.weather.models.DailyItem
 import com.aejne.weather.models.HourlyItem
 import com.aejne.weather.models.OneCallResponse
 import com.aejne.weather.models.WeatherResponse
 import com.aejne.weather.ui.theme.MyTheme
-import com.aejne.weather.ui.theme.pink100
 import com.aejne.weather.utils.DataUtils
+import com.aejne.weather.utils.Resource
+import com.aejne.weather.utils.Status
 import com.aejne.weather.utils.TimeUtil
 import com.aejne.weather.utils.sampleExtendedData
 import com.aejne.weather.utils.sampleWeatherData
@@ -74,8 +76,8 @@ import dev.chrisbanes.accompanist.insets.statusBarsPadding
 @Composable
 fun WeatherApp(viewModel: MainViewModel = viewModel()) {
     val city: String by viewModel.city.observeAsState("")
-    val weatherResponse: WeatherResponse by viewModel.weatherResponse.observeAsState(
-        sampleWeatherData
+    val weatherResponse: Resource<WeatherResponse> by viewModel.weatherResponse.observeAsState(
+        Resource.loading(null)
     )
     val extendedWeatherResponse: OneCallResponse by viewModel.extendedWeatherData.observeAsState(
         sampleExtendedData
@@ -100,22 +102,46 @@ fun WeatherApp(viewModel: MainViewModel = viewModel()) {
             .clickable(enabled = expanded) { expanded = false },
         elevation = 12.dp,
         shape = CutCornerShape(topStart = 32.dp),
-        color = MaterialTheme.colors.background
+        color = MaterialTheme.colors.surface
     ) {
+        when (weatherResponse.status) {
+            Status.SUCCESS -> {
+                WeatherDetails(
+                    city = city,
+                    weatherResponse = weatherResponse.data!!,
+                    extendedWeatherResponse = extendedWeatherResponse
+                )
+            }
+            Status.LOADING -> {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            }
+            else -> {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 64.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Image(
+                        modifier = Modifier.size(64.dp),
+                        painter = painterResource(
+                            id = R.drawable.ic_weather_day_lightning
+                        ),
+                        contentDescription = "Weather per day",
+                        colorFilter = ColorFilter.tint(color = MaterialTheme.colors.onSurface)
+                    )
 
-        /*Image(
-            modifier = Modifier.fillMaxSize(),
-            painter = painterResource(id = R.drawable.background_image),
-            contentDescription = "Background",
-            contentScale = ContentScale.FillHeight
-        )*/
-
-        WeatherDetails(
-            modifier = Modifier.statusBarsPadding(),
-            city = city,
-            weatherResponse = weatherResponse,
-            extendedWeatherResponse = extendedWeatherResponse
-        )
+                    Text(
+                        text = "Could not find any decent weather for $city",
+                        textAlign = TextAlign.Center,
+                        fontSize = 24.sp
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -127,12 +153,15 @@ fun WeatherDetails(
     extendedWeatherResponse: OneCallResponse
 ) {
 
+    val scrollState = rememberScrollState()
+
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .scrollable(rememberScrollState(), Orientation.Vertical),
-
+            .verticalScroll(scrollState)
     ) {
+        Spacer(modifier = Modifier.height(16.dp))
+
         Text(
             modifier = Modifier.fillMaxWidth(),
             text = city,
@@ -151,8 +180,17 @@ fun WeatherDetails(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(extendedWeatherResponse.hourly) {
-                HourItem(item = it)
+                HourWeatherItem(item = it)
             }
+        }
+
+        extendedWeatherResponse.daily.forEach {
+            DayWeatherItem(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp, horizontal = 16.dp),
+                item = it
+            )
         }
 
         SunDetails(
@@ -165,7 +203,7 @@ fun WeatherDetails(
 }
 
 @Composable
-fun HourItem(
+fun HourWeatherItem(
     modifier: Modifier = Modifier,
     item: HourlyItem
 ) {
@@ -191,7 +229,7 @@ fun HourItem(
                     ?: R.drawable.ic_weather_day_sunny
             ),
             contentDescription = "Weather per day",
-            colorFilter = ColorFilter.tint(color = MaterialTheme.colors.onBackground)
+            colorFilter = ColorFilter.tint(color = MaterialTheme.colors.onSurface)
         )
         Text(
             text = stringResource(
@@ -205,150 +243,71 @@ fun HourItem(
 }
 
 @Composable
-fun CurrentWeather(
+fun DayWeatherItem(
     modifier: Modifier = Modifier,
-    weatherResponse: WeatherResponse
+    item: DailyItem
 ) {
-    Row(
-        modifier = modifier
-            .padding(16.dp)
-            .fillMaxWidth()
-    ) {
-        Column {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                WeatherIndicator(weatherDescription = weatherResponse.weather.first().main)
+
+    Column(modifier = modifier) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 16.dp)
+        ) {
+            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.TopStart) {
                 Text(
-                    modifier = Modifier.padding(start = 4.dp),
-                    text = DataUtils.formatTemperature(weatherResponse.main.temp),
-                    style = MaterialTheme.typography.h3
-                )
-                Image(
-                    modifier = Modifier
-                        .size(32.dp)
-                        .offset(x = (-8).dp, y = (-8).dp),
-                    painter = painterResource(id = R.drawable.ic_weather_celsius),
-                    contentDescription = "Celsius",
-                    colorFilter = ColorFilter.tint(color = MaterialTheme.colors.onBackground)
+                    text = TimeUtil.formatWeekDay(item.dt)
                 )
             }
 
-            Spacer(modifier = Modifier.height(2.dp))
-
-            val feelsLikeTemp = stringResource(
+            val dayTemp = stringResource(
                 id = R.string.degree_format,
-                formatArgs = arrayOf(DataUtils.formatTemperature(weatherResponse.main.feels_like))
-            )
-            Text(
-                text = "Feels like $feelsLikeTemp",
-                style = MaterialTheme.typography.body2
+                DataUtils.formatTemperature(item.temp.day)
             )
 
-            val hiTemp = stringResource(
+            val nightTemp = stringResource(
                 id = R.string.degree_format,
-                formatArgs = arrayOf(DataUtils.formatTemperature(weatherResponse.main.temp_max))
-            )
-            val lowTemp = stringResource(
-                id = R.string.degree_format,
-                formatArgs = arrayOf(DataUtils.formatTemperature(weatherResponse.main.temp_min))
+                DataUtils.formatTemperature(item.temp.night)
             )
 
-            Text(
-                text = "Hi: $hiTemp | Low: $lowTemp",
-                style = MaterialTheme.typography.body2
-            )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.TopEnd
+            ) {
+                Row {
+                    Text(
+                        modifier = Modifier.padding(end = 8.dp),
+                        text = "$dayTemp / $nightTemp",
+                        fontSize = 14.sp,
+                        style = MaterialTheme.typography.body2
+                    )
+                    Image(
+                        modifier = Modifier.size(32.dp),
+                        painter = painterResource(
+                            id = DataUtils.getWeatherIcon(item.weather.first().main)
+                                ?: R.drawable.ic_weather_day_sunny
+                        ),
+                        contentDescription = "Weather per day",
+                        colorFilter = ColorFilter.tint(color = MaterialTheme.colors.onSurface)
+                    )
+                }
+            }
         }
+    }
+}
 
-        Column(
+@Preview("Day weather item")
+@Composable
+fun DayWeatherPreview() {
+    MyTheme {
+        DayWeatherItem(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 8.dp),
-            horizontalAlignment = Alignment.End
-        ) {
-            WeatherDetail(
-                title = "Humidity",
-                value = "${weatherResponse.main.humidity}",
-                suffix = "%",
-                drawable = R.drawable.ic_humidity,
-                contentDescription = "Humidity"
-            )
-
-            WeatherDetail(
-                title = "Pressure",
-                value = "${weatherResponse.main.pressure}",
-                suffix = " mBar",
-                drawable = R.drawable.ic_barometer,
-                contentDescription = "Humidity"
-            )
-
-            WeatherDetail(
-                title = "Wind",
-                value = "${weatherResponse.wind.speed}",
-                suffix = " km/h",
-                drawable = R.drawable.ic_wind_deg,
-                drawableRotation = (weatherResponse.wind.deg).toFloat(),
-                contentDescription = "Wind"
-            )
-        }
-    }
-}
-
-@Composable
-fun WeatherIndicator(weatherDescription: String) {
-    DataUtils.getWeatherIcon(weatherDescription = weatherDescription)?.let {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Image(
-                modifier = Modifier.size(48.dp),
-                painter = painterResource(id = it),
-                contentDescription = "Current weather image",
-                colorFilter = ColorFilter.tint(color = MaterialTheme.colors.onBackground)
-            )
-            Text(
-                text = weatherDescription,
-                fontSize = 12.sp
-            )
-        }
-    } ?: run {
-        Text(
-            text = weatherDescription,
-            fontSize = 12.sp
+                .padding(vertical = 8.dp)
+                .wrapContentHeight(),
+            item = sampleExtendedData.daily.first()
         )
-    }
-}
-
-@Composable
-fun WeatherDetail(
-    modifier: Modifier = Modifier,
-    title: String,
-    value: String,
-    suffix: String,
-    drawable: Int,
-    drawableRotation: Float = 0f,
-    contentDescription: String
-) {
-    Row(
-        modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            modifier = Modifier.padding(end = 4.dp),
-            text = "$title: $value$suffix"
-        )
-        Image(
-            modifier = Modifier
-                .rotate(drawableRotation)
-                .size(24.dp),
-            painter = painterResource(id = drawable),
-            contentDescription = contentDescription,
-            colorFilter = ColorFilter.tint(color = MaterialTheme.colors.onBackground)
-        )
-    }
-}
-
-@Preview("Current weather")
-@Composable
-fun CurrentWeatherPreview() {
-    MyTheme {
-        CurrentWeather(modifier = Modifier.background(pink100), weatherResponse = sampleWeatherData)
     }
 }
 
@@ -361,21 +320,5 @@ fun WeatherDetailsPreview() {
             weatherResponse = sampleWeatherData,
             extendedWeatherResponse = sampleExtendedData
         )
-    }
-}
-
-// @Preview("Light Theme", widthDp = 360, heightDp = 640)
-@Composable
-fun LightPreview() {
-    MyTheme {
-        WeatherApp()
-    }
-}
-
-// @Preview("Dark Theme", widthDp = 360, heightDp = 640)
-@Composable
-fun DarkPreview() {
-    MyTheme(darkTheme = true) {
-        WeatherApp()
     }
 }

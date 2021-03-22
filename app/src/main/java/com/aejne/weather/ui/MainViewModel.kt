@@ -15,7 +15,6 @@
  */
 package com.aejne.weather.ui
 
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -23,7 +22,9 @@ import androidx.lifecycle.viewModelScope
 import com.aejne.weather.models.OneCallResponse
 import com.aejne.weather.models.WeatherResponse
 import com.aejne.weather.repository.MainRepository
+import com.aejne.weather.utils.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -35,9 +36,9 @@ class MainViewModel @Inject constructor(
     private val _city = MutableLiveData("Stockholm")
     val city: LiveData<String> = _city
 
-    private val _weatherResponse = MutableLiveData<WeatherResponse>()
+    private val _weatherResponse = MutableLiveData<Resource<WeatherResponse>>()
 
-    val weatherResponse: LiveData<WeatherResponse>
+    val weatherResponse: LiveData<Resource<WeatherResponse>>
         get() = _weatherResponse
 
     private val _extendedWeatherData = MutableLiveData<OneCallResponse>()
@@ -57,17 +58,17 @@ class MainViewModel @Inject constructor(
     private fun getWeatherData() = viewModelScope.launch {
 
         city.value?.let { city ->
-            // _res.postValue(Resource.loading(null))
+            _weatherResponse.postValue(Resource.loading(null))
+            delay(1000)
             mainRepository.getWeather(city).let { response ->
                 if (response.isSuccessful) {
-                    Log.d("Weather", "Response: ${response.body()}")
                     val weatherResponse = response.body()
                     weatherResponse?.let {
-                        _weatherResponse.postValue(it)
+                        _weatherResponse.postValue(Resource.success(it))
                         getExtendedWeatherData(it.coord.lat, it.coord.lon)
                     }
                 } else {
-                    // _res.postValue(Resource.error(response.errorBody().toString(), null))
+                    _weatherResponse.postValue(Resource.error(response.errorBody().toString(), null))
                 }
             }
         }
