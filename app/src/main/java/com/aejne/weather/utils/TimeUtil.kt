@@ -34,7 +34,8 @@ object TimeUtil {
             .ofEpochMilli(timestamp.toLong() * 1000)
             .atZone(ZoneId.systemDefault())
             .toLocalTime()
-            .format(DateTimeFormatter.ofPattern("HH"))
+            .withMinute(0)
+            .format(DateTimeFormatter.ofPattern("HH:mm"))
     }
 
     fun currentTime(): Long {

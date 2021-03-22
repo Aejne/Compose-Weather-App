@@ -18,9 +18,11 @@ package com.aejne.weather.ui
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.scrollable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -36,6 +38,8 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CutCornerShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Card
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
@@ -48,8 +52,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -70,7 +76,9 @@ import dev.chrisbanes.accompanist.insets.statusBarsPadding
 @Composable
 fun WeatherApp(viewModel: MainViewModel = viewModel()) {
     val city: String by viewModel.city.observeAsState("")
-    val weatherResponse: WeatherResponse by viewModel.weatherResponse.observeAsState(sampleWeatherData)
+    val weatherResponse: WeatherResponse by viewModel.weatherResponse.observeAsState(
+        sampleWeatherData
+    )
     val extendedWeatherResponse: OneCallResponse by viewModel.extendedWeatherData.observeAsState(
         sampleExtendedData
     )
@@ -118,7 +126,7 @@ fun WeatherDetails(
             .fillMaxWidth()
             .scrollable(rememberScrollState(), Orientation.Vertical),
 
-    ) {
+        ) {
         Text(
             modifier = Modifier.fillMaxWidth(),
             text = city,
@@ -132,7 +140,10 @@ fun WeatherDetails(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        LazyRow(contentPadding = PaddingValues(16.dp)) {
+        LazyRow(
+            contentPadding = PaddingValues(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
             items(extendedWeatherResponse.hourly) {
                 HourItem(item = it)
             }
@@ -152,19 +163,37 @@ fun HourItem(
     modifier: Modifier = Modifier,
     item: HourlyItem
 ) {
-    Column(modifier = modifier.width(64.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(
+        modifier = modifier
+            .width(64.dp)
+            .border(
+                width = 1.dp,
+                color = MaterialTheme.colors.onSurface,
+                shape = RoundedCornerShape(8.dp)
+            )
+            .padding(4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally)
+    {
+        Text(
+            text = TimeUtil.formatHour(item.dt),
+            style = MaterialTheme.typography.body2
+        )
         Image(
             modifier = Modifier.size(48.dp),
-            painter = painterResource(id = DataUtils.getWeatherIcon(item.weather.first().main) ?: R.drawable.ic_weather_day_sunny),
+            painter = painterResource(
+                id = DataUtils.getWeatherIcon(item.weather.first().main)
+                    ?: R.drawable.ic_weather_day_sunny
+            ),
             contentDescription = "Weather per day",
             colorFilter = ColorFilter.tint(color = MaterialTheme.colors.onBackground)
         )
         Text(
-            text = DataUtils.formatTemperature(item.temp),
-            fontSize = 12.sp
-        )
-        Text(
-            text = TimeUtil.formatHour(item.dt)
+            text = stringResource(
+                id = R.string.degree_format,
+                formatArgs = arrayOf(DataUtils.formatTemperature(item.temp))
+            ),
+            fontSize = 14.sp,
+            style = MaterialTheme.typography.body2
         )
     }
 }
@@ -181,12 +210,6 @@ fun CurrentWeather(
     ) {
         Column {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                /*Image(
-                    modifier = Modifier.size(48.dp),
-                    painter = painterResource(id = R.drawable.ic_weather_day_sunny),
-                    contentDescription = "Current weather image",
-                    colorFilter = ColorFilter.tint(color = MaterialTheme.colors.onBackground)
-                )*/
                 WeatherIndicator(weatherDescription = weatherResponse.weather.first().main)
                 Text(
                     modifier = Modifier.padding(start = 4.dp),
@@ -202,13 +225,29 @@ fun CurrentWeather(
                     colorFilter = ColorFilter.tint(color = MaterialTheme.colors.onBackground)
                 )
             }
+
+            Spacer(modifier = Modifier.height(2.dp))
+
+            val feelsLikeTemp = stringResource(
+                id = R.string.degree_format,
+                formatArgs = arrayOf(DataUtils.formatTemperature(weatherResponse.main.feels_like))
+            )
             Text(
-                text = "Feels like ${DataUtils.formatTemperature(weatherResponse.main.feels_like)}",
+                text = "Feels like $feelsLikeTemp",
                 style = MaterialTheme.typography.body2
             )
 
+            val hiTemp = stringResource(
+                id = R.string.degree_format,
+                formatArgs = arrayOf(DataUtils.formatTemperature(weatherResponse.main.temp_max))
+            )
+            val lowTemp = stringResource(
+                id = R.string.degree_format,
+                formatArgs = arrayOf(DataUtils.formatTemperature(weatherResponse.main.temp_min))
+            )
+
             Text(
-                text = "Hi: ${DataUtils.formatTemperature(weatherResponse.main.temp_max)}, lo: ${DataUtils.formatTemperature(weatherResponse.main.temp_min)}",
+                text = "Hi: $hiTemp | Low: $lowTemp",
                 style = MaterialTheme.typography.body2
             )
         }
@@ -230,7 +269,7 @@ fun CurrentWeather(
             WeatherDetail(
                 title = "Pressure",
                 value = "${weatherResponse.main.pressure}",
-                suffix = " kPa",
+                suffix = " mBar",
                 drawable = R.drawable.ic_barometer,
                 contentDescription = "Humidity"
             )
@@ -238,7 +277,7 @@ fun CurrentWeather(
             WeatherDetail(
                 title = "Wind",
                 value = "${weatherResponse.wind.speed}",
-                suffix = " m/s",
+                suffix = " km/h",
                 drawable = R.drawable.ic_wind_deg,
                 drawableRotation = (weatherResponse.wind.deg).toFloat(),
                 contentDescription = "Wind"
@@ -250,7 +289,7 @@ fun CurrentWeather(
 @Composable
 fun WeatherIndicator(weatherDescription: String) {
     DataUtils.getWeatherIcon(weatherDescription = weatherDescription)?.let {
-        Column(horizontalAlignment = Alignment.Start) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Image(
                 modifier = Modifier.size(48.dp),
                 painter = painterResource(id = it),
@@ -311,7 +350,11 @@ fun CurrentWeatherPreview() {
 @Composable
 fun WeatherDetailsPreview() {
     MyTheme {
-        WeatherDetails(city = "Stockholm", weatherResponse = sampleWeatherData, extendedWeatherResponse = sampleExtendedData)
+        WeatherDetails(
+            city = "Stockholm",
+            weatherResponse = sampleWeatherData,
+            extendedWeatherResponse = sampleExtendedData
+        )
     }
 }
 
