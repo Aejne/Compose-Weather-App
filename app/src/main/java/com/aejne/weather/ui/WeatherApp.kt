@@ -15,7 +15,12 @@
  */
 package com.aejne.weather.ui
 
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -39,7 +44,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
@@ -51,6 +55,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -64,7 +70,7 @@ import com.aejne.weather.models.HourlyItem
 import com.aejne.weather.models.OneCallResponse
 import com.aejne.weather.models.WeatherResponse
 import com.aejne.weather.ui.theme.MyTheme
-import com.aejne.weather.utils.DataUtils
+import com.aejne.weather.utils.DataUtil
 import com.aejne.weather.utils.Resource
 import com.aejne.weather.utils.Status
 import com.aejne.weather.utils.TimeUtil
@@ -85,7 +91,8 @@ fun WeatherApp(viewModel: MainViewModel = viewModel()) {
 
     var expanded: Boolean by rememberSaveable { mutableStateOf(false) }
 
-    val frontTranslation by animateDpAsState(targetValue = if (expanded) 220.dp else 0.dp)
+    val frontStartTranslation by animateDpAsState(targetValue = if (expanded) 220.dp else 0.dp)
+    val frontTopTranslation = 56.dp
 
     Surface(modifier = Modifier.fillMaxSize()) {
         Backdrop(onNavClick = { expanded = !expanded }) {
@@ -94,15 +101,17 @@ fun WeatherApp(viewModel: MainViewModel = viewModel()) {
         }
     }
 
+    val shape = CutCornerShape(topStart = 32.dp)
     Surface(
         modifier = Modifier
             .fillMaxSize()
-            .offset(x = frontTranslation, y = 56.dp)
+            .offset(x = frontStartTranslation, y = frontTopTranslation)
             .statusBarsPadding()
+            .clip(shape)
             .clickable(enabled = expanded) { expanded = false },
-        elevation = 12.dp,
-        shape = CutCornerShape(topStart = 32.dp),
-        color = MaterialTheme.colors.surface
+        elevation = 2.dp,
+        color = MaterialTheme.colors.surface,
+        shape = shape
     ) {
         when (weatherResponse.status) {
             Status.SUCCESS -> {
@@ -114,13 +123,14 @@ fun WeatherApp(viewModel: MainViewModel = viewModel()) {
             }
             Status.LOADING -> {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
+                    LoadingIndicator(modifier = Modifier.offset(y = -frontTopTranslation))
                 }
             }
             else -> {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
+                        .offset(y = -frontTopTranslation)
                         .padding(horizontal = 64.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
@@ -143,6 +153,29 @@ fun WeatherApp(viewModel: MainViewModel = viewModel()) {
             }
         }
     }
+}
+
+@Composable
+fun LoadingIndicator(modifier: Modifier = Modifier) {
+
+    val infiniteTransition = rememberInfiniteTransition()
+    val scale = infiniteTransition.animateFloat(
+        initialValue = 1.0f,
+        targetValue = 1.8f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(300),
+            repeatMode = RepeatMode.Reverse
+        )
+    )
+
+    Image(
+        modifier = modifier
+            .size(48.dp)
+            .scale(scale.value),
+        painter = painterResource(id = R.drawable.ic_weather_day_sunny),
+        contentDescription = "Current weather image",
+        colorFilter = ColorFilter.tint(color = MaterialTheme.colors.secondary)
+    )
 }
 
 @Composable
@@ -195,7 +228,7 @@ fun WeatherDetails(
 
         SunDetails(
             modifier = Modifier
-                .padding(top = 32.dp)
+                .padding(top = 8.dp)
                 .padding(horizontal = 16.dp),
             weatherResponse = weatherResponse
         )
@@ -225,7 +258,7 @@ fun HourWeatherItem(
         Image(
             modifier = Modifier.size(48.dp),
             painter = painterResource(
-                id = DataUtils.getWeatherIcon(item.weather.first().main)
+                id = DataUtil.getWeatherIcon(item.weather.first().main)
                     ?: R.drawable.ic_weather_day_sunny
             ),
             contentDescription = "Weather per day",
@@ -234,7 +267,7 @@ fun HourWeatherItem(
         Text(
             text = stringResource(
                 id = R.string.degree_format,
-                formatArgs = arrayOf(DataUtils.formatTemperature(item.temp))
+                formatArgs = arrayOf(DataUtil.formatTemperature(item.temp))
             ),
             fontSize = 14.sp,
             style = MaterialTheme.typography.body2
@@ -262,12 +295,12 @@ fun DayWeatherItem(
 
             val dayTemp = stringResource(
                 id = R.string.degree_format,
-                DataUtils.formatTemperature(item.temp.day)
+                DataUtil.formatTemperature(item.temp.day)
             )
 
             val nightTemp = stringResource(
                 id = R.string.degree_format,
-                DataUtils.formatTemperature(item.temp.night)
+                DataUtil.formatTemperature(item.temp.night)
             )
 
             Box(
@@ -285,7 +318,7 @@ fun DayWeatherItem(
                     Image(
                         modifier = Modifier.size(32.dp),
                         painter = painterResource(
-                            id = DataUtils.getWeatherIcon(item.weather.first().main)
+                            id = DataUtil.getWeatherIcon(item.weather.first().main)
                                 ?: R.drawable.ic_weather_day_sunny
                         ),
                         contentDescription = "Weather per day",

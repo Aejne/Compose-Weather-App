@@ -64,8 +64,8 @@ class MainViewModel @Inject constructor(
                 if (response.isSuccessful) {
                     val weatherResponse = response.body()
                     weatherResponse?.let {
+                        getExtendedWeatherData(it.coord.lat, it.coord.lon).join()
                         _weatherResponse.postValue(Resource.success(it))
-                        getExtendedWeatherData(it.coord.lat, it.coord.lon)
                     }
                 } else {
                     _weatherResponse.postValue(Resource.error(response.errorBody().toString(), null))

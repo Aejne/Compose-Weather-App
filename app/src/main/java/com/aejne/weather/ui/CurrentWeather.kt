@@ -39,7 +39,7 @@ import androidx.compose.ui.unit.sp
 import com.aejne.weather.models.WeatherResponse
 import com.aejne.weather.ui.theme.MyTheme
 import com.aejne.weather.ui.theme.pink100
-import com.aejne.weather.utils.DataUtils
+import com.aejne.weather.utils.DataUtil
 import com.aejne.weather.utils.sampleWeatherData
 import com.example.weather.R
 
@@ -58,7 +58,7 @@ fun CurrentWeather(
                 WeatherIndicator(weatherDescription = weatherResponse.weather.first().main)
                 Text(
                     modifier = Modifier.padding(start = 4.dp),
-                    text = DataUtils.formatTemperature(weatherResponse.main.temp),
+                    text = DataUtil.formatTemperature(weatherResponse.main.temp),
                     style = MaterialTheme.typography.h3
                 )
                 Image(
@@ -75,7 +75,7 @@ fun CurrentWeather(
 
             val feelsLikeTemp = stringResource(
                 id = R.string.degree_format,
-                formatArgs = arrayOf(DataUtils.formatTemperature(weatherResponse.main.feels_like))
+                formatArgs = arrayOf(DataUtil.formatTemperature(weatherResponse.main.feels_like))
             )
             Text(
                 text = "Feels like $feelsLikeTemp",
@@ -84,11 +84,11 @@ fun CurrentWeather(
 
             val hiTemp = stringResource(
                 id = R.string.degree_format,
-                formatArgs = arrayOf(DataUtils.formatTemperature(weatherResponse.main.temp_max))
+                formatArgs = arrayOf(DataUtil.formatTemperature(weatherResponse.main.temp_max))
             )
             val lowTemp = stringResource(
                 id = R.string.degree_format,
-                formatArgs = arrayOf(DataUtils.formatTemperature(weatherResponse.main.temp_min))
+                formatArgs = arrayOf(DataUtil.formatTemperature(weatherResponse.main.temp_min))
             )
 
             Text(
@@ -114,7 +114,7 @@ fun CurrentWeather(
             WeatherDetail(
                 title = "Pressure",
                 value = "${weatherResponse.main.pressure}",
-                suffix = " mBar",
+                suffix = " mbar",
                 drawable = R.drawable.ic_barometer,
                 contentDescription = "Humidity"
             )
@@ -133,7 +133,7 @@ fun CurrentWeather(
 
 @Composable
 fun WeatherIndicator(weatherDescription: String) {
-    DataUtils.getWeatherIcon(weatherDescription = weatherDescription)?.let {
+    DataUtil.getWeatherIcon(weatherDescription = weatherDescription)?.let {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Image(
                 modifier = Modifier.size(48.dp),

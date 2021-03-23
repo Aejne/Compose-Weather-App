@@ -15,7 +15,6 @@
  */
 package com.aejne.weather.ui
 
-import android.util.Log
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
@@ -64,16 +63,15 @@ fun SunDetails(
 
     LaunchedEffect(0) {
         val currentTime = TimeUtil.currentTime()
-        Log.d("SunDetails", "LaunchedEffect")
         targetProgress = TimeUtil.getTimeProgress(
             weatherResponse.sys.sunrise.toLong(),
             currentTime,
             weatherResponse.sys.sunset.toLong()
         ).coerceIn(0.0, 1.0)
-        Log.d("SunDetails", "LaunchedEffect, new targetProgress = $targetProgress")
     }
 
-    val arcColor = MaterialTheme.colors.onSurface
+    val backgroundArcColor = MaterialTheme.colors.onSurface
+    val foregroundArcColor = MaterialTheme.colors.secondary
 
     Column(modifier = modifier) {
         Canvas(
@@ -83,7 +81,7 @@ fun SunDetails(
                 .padding(horizontal = 24.dp)
         ) {
             drawArc(
-                color = arcColor,
+                color = backgroundArcColor,
                 startAngle = 180f,
                 sweepAngle = 180f,
                 topLeft = Offset(0f, 150f),
@@ -95,7 +93,7 @@ fun SunDetails(
             )
 
             drawArc(
-                color = Color.Yellow,
+                color = foregroundArcColor,
                 startAngle = 180f,
                 sweepAngle = progressValue,
                 topLeft = Offset(0f, 150f),

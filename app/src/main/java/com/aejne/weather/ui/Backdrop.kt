@@ -17,14 +17,14 @@ package com.aejne.weather.ui
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
@@ -37,12 +37,14 @@ import androidx.compose.material.icons.outlined.WbSunny
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.aejne.weather.ui.theme.MyTheme
 import com.aejne.weather.utils.verticalGradientScrim
+import dev.chrisbanes.accompanist.insets.navigationBarsPadding
 import dev.chrisbanes.accompanist.insets.statusBarsPadding
 
 val cityList = listOf(
@@ -54,7 +56,7 @@ val cityList = listOf(
     "Moscow",
     "Sydney",
     "Bogota",
-    "Gotham City",
+    "Googletown",
     "Buenos Aires",
     "New York",
     "Beijing",
@@ -62,7 +64,15 @@ val cityList = listOf(
     "Tel Aviv",
     "Los Angeles",
     "Detroit",
-    "Rio de Janeiro"
+    "Rio de Janeiro",
+    "Tokyo",
+    "Kairo",
+    "Casablanca",
+    "Oslo",
+    "Copenhagen",
+    "Rome",
+    "Madrid",
+    "Barcelona"
 )
 
 @Composable
@@ -86,12 +96,13 @@ fun Backdrop(
                 onNavClick = onNavClick
             )
 
-            Column(
+            LazyColumn(
                 modifier = Modifier
-                    .scrollable(rememberScrollState(), orientation = Orientation.Vertical)
+                    .navigationBarsPadding()
                     .padding(start = 16.dp, top = 8.dp),
+                contentPadding = PaddingValues(4.dp)
             ) {
-                cityList.forEach {
+                items(cityList) {
                     CityChip(
                         modifier = Modifier.padding(vertical = 4.dp),
                         city = it,
@@ -109,13 +120,15 @@ fun CityChip(
     city: String,
     onClick: (String) -> Unit = { }
 ) {
+    val shape = RoundedCornerShape(percent = 50)
     Text(
         modifier = modifier
             .border(
                 color = MaterialTheme.colors.onBackground,
-                shape = RoundedCornerShape(percent = 50),
+                shape = shape,
                 width = 1.dp
             )
+            .clip(shape = shape)
             .clickable { onClick(city) }
             .padding(
                 vertical = 4.dp,
@@ -152,7 +165,10 @@ fun HomeAppBar(
         title = {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = onNavClick) {
-                    Icon(imageVector = Icons.Outlined.WbSunny, contentDescription = "Navigation icon")
+                    Icon(
+                        imageVector = Icons.Outlined.WbSunny,
+                        contentDescription = "Navigation icon"
+                    )
                 }
 
                 Text(
